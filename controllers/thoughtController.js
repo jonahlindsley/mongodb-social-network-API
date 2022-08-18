@@ -4,7 +4,7 @@ const Thought = require('../models/Thought');
 const User  = require('../models/User');
 
 module.exports = {
-  // Get all Thought
+  // Get all Thoughts
   getThoughts(req, res) {
     Thought.find()
       .then(async (thoughts) => {
@@ -39,7 +39,7 @@ module.exports = {
   // create a new Thought
   createThought(req, res) {
     Thought.create(req.body)
-      .then((thought) => res.json(though))
+      .then((thought) => res.json(thought))
       .catch((err) => res.status(500).json(err));
   },
   // Delete a Thought and remove them from the user
