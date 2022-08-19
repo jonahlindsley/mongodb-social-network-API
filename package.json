@@ -24,5 +24,8 @@
     "express": "^4.18.1",
     "mongoose": "^6.5.2",
     "nodemon": "^2.0.19"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0"
   }
 }

@@ -28,7 +28,7 @@ module.exports = {
           ? res.status(404).json({ message: 'No Thought with that ID' })
           : res.json({
             thought,
-              grade: await grade(req.params.thoughtId),
+              // grade: await grade(req.params.thoughtId),
             })
       )
       .catch((err) => {
@@ -38,8 +38,16 @@ module.exports = {
   },
   // create a new Thought
   createThought(req, res) {
-    Thought.create(req.body)
-      .then((thought) => res.json(thought))
+    const newThoughtData = req.body
+    Thought.create(newThoughtData)
+      .then((thought) => {
+        User.findOne({_id: req.params.UserId})
+        .then(user => {
+          user.thoughts.push(thought._id)
+          user.save()
+          res.json(user)
+        })
+      })
       .catch((err) => res.status(500).json(err));
   },
   // Delete a Thought and remove them from the user
@@ -65,6 +73,21 @@ module.exports = {
         console.log(err);
         res.status(500).json(err);
       });
+  },
+
+  // update an existing thought
+  updateThought(req, res) {
+      Thought.findOneAndUpdate(
+        { _id: req.params.thoughtId },
+        { $set: req.body },
+        { runValidators: true, new: true }
+      )
+        .then((user) =>
+          !user
+            ? res.status(404).json({ message: 'No thought with this id!' })
+            : res.json(user)
+        )
+        .catch((err) => res.status(500).json(err));
   },
 
   // Add an assignment to a Thought
