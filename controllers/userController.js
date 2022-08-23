@@ -1,12 +1,13 @@
 
 const { ObjectId } = require('mongoose').Types;
-const Thought = require('../models/Thought');
+const {Thought} = require('../models/Thought');
 const User = require('../models/User');
+
 
 module.exports = {
   // Get all users
   getUsers(req, res) {
-    User.find()
+    User.find({})
       .then((users) => res.json(users))
       .catch((err) => res.status(500).json(err));
   },
@@ -36,7 +37,7 @@ module.exports = {
       .then((user) =>
         !user
           ? res.status(404).json({ message: 'No user with that ID' })
-          : Thought.deleteMany({ _id: { $in: user.thought } })
+          : Thought.deleteMany({ _id: { $in: user.thoughts } })
       )
       .then(() => res.json({ message: 'user and Thoughts deleted!' }))
       .catch((err) => res.status(500).json(err));
@@ -55,4 +56,32 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
+  deleteFriend({params}, res) {
+    User.findOneAndUpdate(
+      { _id: params.UserId },
+      { $pull: {friends: params.friendsId} },
+      {new: true}
+    )
+      .then((user) => {
+        console.log(user)
+        if (!user){
+          res.status(404).json({ message: 'No user with this id!' })
+          return;
+        }
+         res.json(user)})
+      .catch((err) => res.status(500).json(err));
+  },
+  addFriend({params}, res) {
+    User.findOneAndUpdate(
+      { _id: params.UserId },
+      { $addToSet: {friends: params.friendsId} },
+      {new: true }
+    )
+      .then((user) => {
+        if (!user){
+           res.status(404).json({ message: 'No user with this id!' })
+           return;
+         }res.json(user)})
+      .catch((err) => res.status(500).json(err));
+},
 };

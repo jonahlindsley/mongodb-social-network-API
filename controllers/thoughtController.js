@@ -1,15 +1,16 @@
 // ObjectId() method for converting ThoughtId string into an ObjectId for querying database
 const { ObjectId } = require('mongoose').Types;
-const Thought = require('../models/Thought');
+const {Thought} = require('../models/Thought');
 const User  = require('../models/User');
 
 module.exports = {
   // Get all Thoughts
   getThoughts(req, res) {
-    Thought.find()
+    Thought.find({})
       .then(async (thoughts) => {
         const thoughtObj = {
           thoughts,
+        
         };
         return res.json(thoughtObj);
       })
@@ -52,28 +53,34 @@ module.exports = {
   },
   // Delete a Thought and remove them from the user
   deleteThought(req, res) {
-    Thought.findOneAndRemove({ _id: req.params.thoughtId })
-      .then((thought) =>
-        !thought
-          ? res.status(404).json({ message: 'No such Thought exists' })
-          : User.findOneAndUpdate(
-              { thoughts: req.params.thoughtId },
-              { $pull: { thoughts: req.params.thoughtId } },
-              { new: true }
-            )
-      )
-      .then((user) =>
-        !user
-          ? res.status(404).json({
-              message: 'Thought deleted, but no users found',
-            })
-          : res.json({ message: 'Thought successfully deleted' })
-      )
+    Thought.findOneAndDelete({ _id: req.params.thoughtId })
+      .then((thought) => {
+        if(!thought) {
+          res.status(404).json({ message: 'No such Thought exists' }) 
+          return;
+        }
+           res.json(thought)
+      })
+            
+            //User.findOneAndUpdate(
+          //     {_id: req.body.userId},        
+          //     // { thoughts: req.params.thoughtId },
+          //     { $pull: { thoughts: req.params.thoughtId } },
+          //     { new: true },
+          //   )
+      
+      // .then((user) =>
+      //   !user
+      //     ? res.status(404).json({
+      //         message: 'Thought deleted, but no users found',
+      //       })
+      //     : res.json({ message: 'Thought successfully deleted' })
+      // )
       .catch((err) => {
         console.log(err);
         res.status(500).json(err);
       });
-  },
+    },
 
   // update an existing thought
   updateThought(req, res) {
@@ -89,4 +96,31 @@ module.exports = {
         )
         .catch((err) => res.status(500).json(err));
   },
+  addReaction({params, body}, res) {
+    Thought.findOneAndUpdate(
+      { _id: params.thoughtId },
+      { $addToSet: {reactions: body} },
+      {new: true }
+    )
+      .then((thought) => {
+        if (!thought){
+           res.status(404).json({ message: 'No thought with this id!' })
+           return;
+         }res.json(thought)})
+      .catch((err) => res.status(500).json(err));
+},
+deleteReaction({params}, res) {
+  Thought.findOneAndUpdate(
+    { _id: params.thoughtId },
+    { $pull: {reactions: {_id: params.reactionId}} },
+  )
+    .then((thought) => {
+      console.log(thought)
+      if (!thought){
+        res.status(404).json({ message: 'No thought with this id!' })
+        return;
+      }
+       res.json(thought)})
+    .catch((err) => res.status(500).json(err));
+},
 };
